@@ -9,7 +9,6 @@ interface AudioInfo {
   thumbnail: string;
   duration: string;
   author: string;
-  downloadUrl: string;
 }
 
 export default function YouTubeToAudio() {
@@ -17,6 +16,18 @@ export default function YouTubeToAudio() {
   const [loading, setLoading] = useState(false);
   const [audioInfo, setAudioInfo] = useState<AudioInfo | null>(null);
   const [error, setError] = useState('');
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = () => {
+    if (!url) return;
+    setDownloading(true);
+
+    // Open the stream endpoint in a new window to trigger download
+    const streamUrl = `/api/youtube/stream?url=${encodeURIComponent(url)}&format=audio`;
+    window.open(streamUrl, '_blank');
+
+    setTimeout(() => setDownloading(false), 2000);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,16 +147,23 @@ export default function YouTubeToAudio() {
               </div>
             </div>
 
-            <a
-              href={audioInfo.downloadUrl}
-              download
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-6 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition-all text-center flex items-center justify-center gap-2"
+            <button
+              onClick={handleDownload}
+              disabled={downloading}
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-6 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
             >
-              <Download className="w-5 h-5" />
-              Download Audio
-            </a>
+              {downloading ? (
+                <>
+                  <Loader className="w-5 h-5 animate-spin" />
+                  Starting Download...
+                </>
+              ) : (
+                <>
+                  <Download className="w-5 h-5" />
+                  Download Audio
+                </>
+              )}
+            </button>
 
             <p className="text-xs text-center text-gray-500 dark:text-gray-400">
               Audio will be downloaded in the highest quality available.

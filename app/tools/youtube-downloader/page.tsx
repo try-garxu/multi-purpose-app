@@ -9,7 +9,6 @@ interface VideoInfo {
   thumbnail: string;
   duration: string;
   author: string;
-  downloadUrl: string;
   format: string;
 }
 
@@ -18,6 +17,18 @@ export default function YouTubeDownloader() {
   const [loading, setLoading] = useState(false);
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
   const [error, setError] = useState('');
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = () => {
+    if (!url) return;
+    setDownloading(true);
+
+    // Open the stream endpoint in a new window to trigger download
+    const streamUrl = `/api/youtube/stream?url=${encodeURIComponent(url)}&format=video`;
+    window.open(streamUrl, '_blank');
+
+    setTimeout(() => setDownloading(false), 2000);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,16 +138,23 @@ export default function YouTubeDownloader() {
               </div>
             </div>
 
-            <a
-              href={videoInfo.downloadUrl}
-              download
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all text-center flex items-center justify-center gap-2"
+            <button
+              onClick={handleDownload}
+              disabled={downloading}
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
             >
-              <Download className="w-5 h-5" />
-              Download Video
-            </a>
+              {downloading ? (
+                <>
+                  <Loader className="w-5 h-5 animate-spin" />
+                  Starting Download...
+                </>
+              ) : (
+                <>
+                  <Download className="w-5 h-5" />
+                  Download Video
+                </>
+              )}
+            </button>
 
             <p className="text-xs text-center text-gray-500 dark:text-gray-400">
               Note: Some videos may not be downloadable due to restrictions or DRM protection.
