@@ -16,6 +16,7 @@ export default function Notes() {
   const [noteTitle, setNoteTitle] = useState('Untitled Note');
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit,
       Placeholder.configure({
