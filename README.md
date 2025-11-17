@@ -1,6 +1,6 @@
 # Multi-Purpose Tools Hub 🛠️
 
-A comprehensive web application featuring 16+ powerful tools for productivity, content creation, and development. Built with Next.js, TypeScript, and Tailwind CSS.
+A comprehensive web application featuring 14+ powerful tools for productivity, content creation, and development. Built with Next.js, TypeScript, and Tailwind CSS.
 
 ![Multi-Purpose Tools Hub](https://img.shields.io/badge/Next.js-16.0-black?style=for-the-badge&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
@@ -10,10 +10,6 @@ A comprehensive web application featuring 16+ powerful tools for productivity, c
 
 ### 📄 PDF Tools
 - **PDF Merger** - Combine multiple PDF files into one document with drag-and-drop reordering
-
-### 📹 Media Tools
-- **YouTube Video Downloader** - Download YouTube videos in high quality
-- **YouTube to Audio Converter** - Extract audio from YouTube videos
 
 ### 🖼️ Image Tools
 - **Image Format Converter** - Convert between PNG, JPEG, and WebP formats
@@ -82,21 +78,14 @@ npm start
 - **PDF Processing**: pdf-lib
 - **QR Codes**: qrcode
 - **Encryption**: crypto-js
-- **YouTube**: @distube/ytdl-core
 
 ## 📁 Project Structure
 
 ```
 multi-purpose-app/
 ├── app/
-│   ├── api/
-│   │   └── youtube/
-│   │       └── download/
-│   │           └── route.ts       # YouTube download API
 │   ├── tools/
 │   │   ├── pdf-merger/
-│   │   ├── youtube-downloader/
-│   │   ├── youtube-to-audio/
 │   │   ├── image-converter/
 │   │   ├── image-resizer/
 │   │   ├── text-share/
@@ -127,12 +116,6 @@ multi-purpose-app/
 - Drag to reorder before merging
 - Client-side processing (no server upload)
 - Download merged PDF
-
-### YouTube Tools
-- Download videos in various qualities
-- Extract audio from videos
-- Shows video metadata (title, author, duration, thumbnail)
-- Built with ytdl-core
 
 ### Image Tools
 - **Converter**: Support for PNG, JPEG, WebP
@@ -175,7 +158,7 @@ multi-purpose-app/
 
 ## 🌟 Key Highlights
 
-- ✅ 16+ Professional tools in one app
+- ✅ 14+ Professional tools in one app
 - ✅ Modern, responsive UI with dark mode support
 - ✅ Client-side processing for privacy
 - ✅ No login required for any feature

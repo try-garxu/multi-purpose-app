@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {
-  FileText, Download, Music, Image as ImageIcon, Maximize,
+  FileText, Image as ImageIcon, Maximize,
   Lock, StickyNote, Pencil, QrCode, Link2, Code,
   Calculator, Hash, FileJson, Type, Palette
 } from "lucide-react";
@@ -20,20 +20,6 @@ const tools: Tool[] = [
     icon: <FileText className="w-6 h-6" />,
     href: "/tools/pdf-merger",
     color: "bg-red-500"
-  },
-  {
-    title: "YouTube Downloader",
-    description: "Download YouTube videos easily",
-    icon: <Download className="w-6 h-6" />,
-    href: "/tools/youtube-downloader",
-    color: "bg-blue-500"
-  },
-  {
-    title: "YouTube to Audio",
-    description: "Convert YouTube videos to MP3",
-    icon: <Music className="w-6 h-6" />,
-    href: "/tools/youtube-to-audio",
-    color: "bg-purple-500"
   },
   {
     title: "Image Converter",
