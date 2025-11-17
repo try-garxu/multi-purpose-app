@@ -1,21 +1,51 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { useState, useEffect } from 'react';
 import ToolLayout from '@/components/ToolLayout';
 
 const Excalidraw = dynamic(
   async () => (await import('@excalidraw/excalidraw')).Excalidraw,
-  { ssr: false }
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full flex items-center justify-center" style={{ height: '700px' }}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading drawing board...</p>
+        </div>
+      </div>
+    )
+  }
 );
 
 export default function DrawingBoard() {
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    // Check system theme preference
+    if (typeof window !== 'undefined') {
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setTheme(isDark ? 'dark' : 'light');
+
+      // Listen for theme changes
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handleChange = (e: MediaQueryListEvent) => {
+        setTheme(e.matches ? 'dark' : 'light');
+      };
+
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    }
+  }, []);
+
   return (
     <ToolLayout
       title="Drawing Board"
       description="Create sketches, diagrams, and illustrations with an intuitive drawing tool."
     >
-      <div className="w-full" style={{ height: '700px' }}>
-        <Excalidraw theme="light" />
+      <div className="w-full border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden" style={{ height: '700px' }}>
+        <Excalidraw theme={theme} />
       </div>
       <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
         <p className="mb-2"><strong>Tips:</strong></p>
