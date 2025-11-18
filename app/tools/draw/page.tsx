@@ -265,7 +265,7 @@ export default function DrawingBoard() {
     >
       <div className="flex gap-4 h-[calc(100vh-300px)] min-h-[600px]">
         {/* Left Toolbar - Excalidraw Style */}
-        <div className="flex flex-col gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600">
+        <div className="flex flex-col gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 overflow-y-auto max-h-full">
           <ToolButton toolType="selection" icon="🔲" label="Select" />
           <ToolButton toolType="rectangle" icon="▭" label="Rectangle" />
           <ToolButton toolType="circle" icon="○" label="Circle" />
