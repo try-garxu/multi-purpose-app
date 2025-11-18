@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import ToolLayout from '@/components/ToolLayout';
 
 const Excalidraw = dynamic(
-  async () => (await import('@excalidraw/excalidraw')).Excalidraw,
+  () => import('@excalidraw/excalidraw').then((mod) => mod.Excalidraw),
   {
     ssr: false,
     loading: () => (
