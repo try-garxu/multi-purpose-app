@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import ToolLayout from '@/components/ToolLayout';
 
-type Tool = 'selection' | 'rectangle' | 'circle' | 'arrow' | 'line' | 'pen' | 'text' | 'eraser';
+type Tool = 'selection' | 'rectangle' | 'circle' | 'arrow' | 'line' | 'pen' | 'eraser';
 
 interface Point {
   x: number;
@@ -17,7 +17,7 @@ interface DrawElement {
   color: string;
   strokeWidth: number;
   fill?: string;
-  text?: string;
+  selected?: boolean;
 }
 
 export default function DrawingBoard() {
@@ -29,6 +29,9 @@ export default function DrawingBoard() {
   const [color, setColor] = useState('#000000');
   const [strokeWidth, setStrokeWidth] = useState(2);
   const [fillColor, setFillColor] = useState('transparent');
+  const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState<Point>({ x: 0, y: 0 });
 
   // Initialize canvas
   useEffect(() => {
@@ -48,6 +51,47 @@ export default function DrawingBoard() {
     window.addEventListener('resize', resizeCanvas);
     return () => window.removeEventListener('resize', resizeCanvas);
   }, []);
+
+  // Check if point is inside element bounds
+  const isPointInElement = (point: Point, element: DrawElement): boolean => {
+    if (element.points.length < 2) return false;
+
+    if (element.type === 'rectangle') {
+      const start = element.points[0];
+      const end = element.points[1];
+      const minX = Math.min(start.x, end.x);
+      const maxX = Math.max(start.x, end.x);
+      const minY = Math.min(start.y, end.y);
+      const maxY = Math.max(start.y, end.y);
+      return point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY;
+    } else if (element.type === 'circle') {
+      const center = element.points[0];
+      const edge = element.points[1];
+      const radius = Math.sqrt(
+        Math.pow(edge.x - center.x, 2) + Math.pow(edge.y - center.y, 2)
+      );
+      const distance = Math.sqrt(
+        Math.pow(point.x - center.x, 2) + Math.pow(point.y - center.y, 2)
+      );
+      return distance <= radius;
+    } else if (element.type === 'line' || element.type === 'arrow') {
+      const start = element.points[0];
+      const end = element.points[1];
+      const threshold = 10;
+      const distance = Math.abs(
+        (end.y - start.y) * point.x -
+        (end.x - start.x) * point.y +
+        end.x * start.y -
+        end.y * start.x
+      ) / Math.sqrt(Math.pow(end.y - start.y, 2) + Math.pow(end.x - start.x, 2));
+      return distance <= threshold;
+    } else if (element.type === 'pen') {
+      return element.points.some(p =>
+        Math.sqrt(Math.pow(point.x - p.x, 2) + Math.pow(point.y - p.y, 2)) <= 10
+      );
+    }
+    return false;
+  };
 
   // Redraw canvas whenever elements change
   const redraw = useCallback(() => {
@@ -69,6 +113,14 @@ export default function DrawingBoard() {
       ctx.lineWidth = element.strokeWidth;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
+
+      // Draw selection highlight
+      if (element.selected || element.id === selectedElementId) {
+        ctx.save();
+        ctx.strokeStyle = '#3b82f6';
+        ctx.lineWidth = element.strokeWidth + 2;
+        ctx.setLineDash([5, 5]);
+      }
 
       if (element.type === 'pen') {
         ctx.beginPath();
@@ -154,8 +206,13 @@ export default function DrawingBoard() {
         }
         ctx.stroke();
       }
+
+      // Restore after selection highlight
+      if (element.selected || element.id === selectedElementId) {
+        ctx.restore();
+      }
     });
-  }, [elements, currentElement]);
+  }, [elements, currentElement, selectedElementId]);
 
   useEffect(() => {
     redraw();
@@ -173,10 +230,27 @@ export default function DrawingBoard() {
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (tool === 'selection') return;
+    const point = getMousePos(e);
+
+    if (tool === 'selection') {
+      // Find clicked element
+      const clickedElement = [...elements].reverse().find(el => isPointInElement(point, el));
+
+      if (clickedElement) {
+        setSelectedElementId(clickedElement.id);
+        setIsDragging(true);
+        // Calculate offset from element's first point
+        setDragOffset({
+          x: point.x - clickedElement.points[0].x,
+          y: point.y - clickedElement.points[0].y
+        });
+      } else {
+        setSelectedElementId(null);
+      }
+      return;
+    }
 
     setIsDrawing(true);
-    const point = getMousePos(e);
 
     const newElement: DrawElement = {
       id: Date.now().toString(),
@@ -191,9 +265,27 @@ export default function DrawingBoard() {
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing || !currentElement) return;
-
     const point = getMousePos(e);
+
+    // Handle dragging selected element
+    if (tool === 'selection' && isDragging && selectedElementId) {
+      setElements(prevElements =>
+        prevElements.map(el => {
+          if (el.id === selectedElementId) {
+            const dx = point.x - dragOffset.x - el.points[0].x;
+            const dy = point.y - dragOffset.y - el.points[0].y;
+            return {
+              ...el,
+              points: el.points.map(p => ({ x: p.x + dx, y: p.y + dy }))
+            };
+          }
+          return el;
+        })
+      );
+      return;
+    }
+
+    if (!isDrawing || !currentElement) return;
 
     if (tool === 'pen' || tool === 'eraser') {
       setCurrentElement({
@@ -209,6 +301,11 @@ export default function DrawingBoard() {
   };
 
   const handleMouseUp = () => {
+    if (isDragging) {
+      setIsDragging(false);
+      return;
+    }
+
     if (currentElement && currentElement.points.length > 0) {
       setElements([...elements, currentElement]);
     }
@@ -219,10 +316,19 @@ export default function DrawingBoard() {
   const handleClear = () => {
     setElements([]);
     setCurrentElement(null);
+    setSelectedElementId(null);
   };
 
   const handleUndo = () => {
     setElements(elements.slice(0, -1));
+    setSelectedElementId(null);
+  };
+
+  const handleDelete = () => {
+    if (selectedElementId) {
+      setElements(elements.filter(el => el.id !== selectedElementId));
+      setSelectedElementId(null);
+    }
   };
 
   const handleDownload = () => {
@@ -245,7 +351,12 @@ export default function DrawingBoard() {
     label: string;
   }) => (
     <button
-      onClick={() => setTool(toolType)}
+      onClick={() => {
+        setTool(toolType);
+        if (toolType !== 'selection') {
+          setSelectedElementId(null);
+        }
+      }}
       className={`flex flex-col items-center justify-center w-16 h-16 rounded-lg transition-all ${
         tool === toolType
           ? 'bg-blue-100 dark:bg-blue-900 border-2 border-blue-500'
@@ -296,16 +407,20 @@ export default function DrawingBoard() {
                 value={fillColor === 'transparent' ? '#ffffff' : fillColor}
                 onChange={(e) => setFillColor(e.target.value)}
                 className="w-12 h-12 rounded cursor-pointer border-2 border-gray-300 dark:border-gray-600"
-                disabled={fillColor === 'transparent'}
               />
               <button
                 onClick={() => setFillColor(fillColor === 'transparent' ? '#ffffff' : 'transparent')}
-                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs font-bold flex items-center justify-center"
+                className={`absolute -top-1 -right-1 w-5 h-5 ${
+                  fillColor === 'transparent' ? 'bg-gray-400' : 'bg-red-500'
+                } text-white rounded-full text-xs font-bold flex items-center justify-center hover:opacity-80`}
                 title={fillColor === 'transparent' ? 'Enable fill' : 'Disable fill'}
               >
-                {fillColor === 'transparent' ? '+' : '×'}
+                {fillColor === 'transparent' ? '✓' : '×'}
               </button>
             </div>
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {fillColor === 'transparent' ? 'No fill' : 'Fill on'}
+            </span>
           </div>
 
           {/* Stroke Width */}
@@ -344,10 +459,17 @@ export default function DrawingBoard() {
               ↶ Undo
             </button>
             <button
+              onClick={handleDelete}
+              disabled={!selectedElementId}
+              className="px-4 py-2 rounded-lg font-medium bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              🗑️ Delete
+            </button>
+            <button
               onClick={handleClear}
               className="px-4 py-2 rounded-lg font-medium bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
             >
-              🗑️ Clear
+              Clear All
             </button>
             <div className="flex-1"></div>
             <button
@@ -367,6 +489,7 @@ export default function DrawingBoard() {
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
               className={`w-full h-full ${
+                tool === 'selection' ? 'cursor-pointer' :
                 tool === 'pen' || tool === 'eraser' ? 'cursor-crosshair' : 'cursor-default'
               }`}
               style={{ touchAction: 'none' }}
