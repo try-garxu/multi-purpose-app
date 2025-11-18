@@ -116,12 +116,12 @@ const tools: Tool[] = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <div className="container mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Multi-Purpose Tools Hub
+          <h1 className="text-6xl md:text-7xl font-extrabold mb-4 text-gray-900 dark:text-white tracking-tight">
+            Multi-Purpose <span className="text-blue-600">Tools</span> Hub
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Your all-in-one toolkit for productivity. Free, fast, and works right in your browser.
