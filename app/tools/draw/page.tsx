@@ -69,7 +69,10 @@ export default function DrawingBoard() {
           initialData={{
             appState: {
               viewBackgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
+              openMenu: null,
             },
+            elements: [],
+            libraryItems: [],
           }}
           UIOptions={{
             canvasActions: {
